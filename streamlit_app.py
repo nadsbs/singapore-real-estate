@@ -55,9 +55,14 @@ if selected == "📖 Description":
 elif selected == "📊 Data Exploration":
     st.markdown("### 🔍 Data Exploration")
     
-    # Display dataset
+    # User selection: Head or Tail
+    view_option = st.radio("View dataset: ", ["Head", "Tail"], horizontal=True)
     num = st.number_input("Select number of rows to view", 5, 20)
-    st.dataframe(df.head(num))
+    
+    if view_option == "Head":
+        st.dataframe(df.head(num))
+    else:
+        st.dataframe(df.tail(num))
     
     # Summary statistics
     st.markdown("#### 📊 Summary Statistics")
