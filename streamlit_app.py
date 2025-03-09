@@ -6,6 +6,10 @@ import numpy as np
 import sklearn
 
 from streamlit_option_menu import option_menu
+from sklearn.model_selection import train_test_split  
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error  # Added missing import
+
 
 st.set_page_config(page_title="🏡 Singapore HDB Resale Analysis", layout="wide")
 
@@ -81,43 +85,117 @@ elif selected == "📊 Data Exploration":
 
 elif selected == "📈 Visualization":
     st.markdown("### 📊 Data Visualization")
-    
-    numeric_columns = df.select_dtypes(include=["number"]).columns.tolist()
-    selected_vars = st.multiselect("Select variables for correlation matrix", numeric_columns, default=numeric_columns[:3])
-    
-    if len(selected_vars) > 1:
-        tab_corr, = st.tabs(["📊 Correlation Matrix"])
-        correlation = df[selected_vars].corr()
-        fig = px.imshow(correlation.values, x=correlation.index, y=correlation.columns, labels=dict(color="Correlation"), color_continuous_scale="RdBu_r")
-        tab_corr.plotly_chart(fig, theme="streamlit", use_container_width=True)
 
+    st.title("🏠 Singapore Resale Prices Dashboard")
+    st.markdown("Explore insights from resale prices dataset.")
+
+    # Display dataset preview
+    st.subheader("📊 Dataset Preview")
+    st.dataframe(df.head())
+
+    # Sidebar filters
+    st.sidebar.header("Filter Data")
+    year_range = st.sidebar.slider("Select Year Range", int(df["year"].min()), int(df["year"].max()), (2015, 2023))
+        
+    filtered_flat_types = df["flat_type"].unique()
+    filtered_flat_types = [ft for ft in filtered_flat_types if ft not in ["MULTI-GENERATION", "EXECUTIVE"]]
+
+    flat_type = st.sidebar.multiselect("Select Flat Type", filtered_flat_types, filtered_flat_types)
+    
+    # Apply filters
+    filtered_df = df[(df["year"].between(year_range[0], year_range[1])) & (df["flat_type"].isin(flat_type))]
+
+    # Resale Price Trends Over Time
+    st.subheader("📈 Resale Price Trends Over Time")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    sns.lineplot(data=filtered_df, x="year", y="resale_price", hue="flat_type", marker="o", ax=ax)
+    plt.xlabel("Year")
+    plt.ylabel("Average Resale Price (SGD)")
+    plt.title("Resale Price Trends Over Time")
+    st.pyplot(fig)
+
+    # Average Resale Price by Town
+    st.subheader("🏙️ Average Resale Price by Town")
+    st.markdown("""
+    This bar chart compares the **average resale prices** across different towns in Singapore.  
+    - **Central Area and Bukit Timah** have the highest resale prices.  
+    - **Yishun, Woodlands, and Jurong West** have the lowest prices.  
+    - This allows buyers to compare affordability across different locations.
+    """)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sns.barplot(data=filtered_df.groupby("town")["resale_price"].mean().reset_index(), 
+                x="town", y="resale_price", color="steelblue", ax=ax)
+    plt.xlabel("Town")
+    plt.ylabel("Average Resale Price (SGD)")
+    plt.xticks(rotation=45)
+    plt.title("Average Resale Price by Town")
+    st.pyplot(fig)
+
+    # Price vs Floor Area (Regression Plot)
+    st.subheader("📈 Price vs Floor Area (Regression Plot)")
+    st.markdown("""
+    This scatter plot visualizes the relationship between **floor area (sqm)** and **resale price (SGD)** for properties in Singapore.  
+    - Each dot represents a property listing.  
+    - The red **regression line** shows the general trend: **larger flats tend to have higher resale prices**.
+    """)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.regplot(data=filtered_df, x="floor_area_sqm", y="resale_price", scatter_kws={"alpha": 0.5}, line_kws={"color": "red"}, ax=ax)
+    plt.xlabel("Floor Area (sqm)")
+    plt.ylabel("Resale Price (SGD)")
+    plt.title("Resale Price vs Floor Area (with Regression Line)")
+    st.pyplot(fig)            
+
+# Prediction section
 elif selected == "🤖 Prediction":
+    
+    # Title for Prediction Section
     st.markdown("### 🤖 Price Prediction Using Machine Learning")
-    
-    from sklearn.model_selection import train_test_split  
-    from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import mean_absolute_error
-    
-    ## Step 1: split dataset into X and y
-    x = df.drop(columns=[""])
-    y = df[""]
-    
-    ## Step 2: split between train and test set
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-    
-    ## Step 3: initialize the linear regression model
+
+    ## Step 1: Split dataset into X (features) and y (target variable)
+    x = df[["closest_mrt_dist", "floor_area_sqm", "lease_commence_date", "year", "years_remaining", "number_of_rooms"]]  # Features
+    y = df["resale_price"]  # Target variable
+
+    # Split data into training and testing sets (80% training, 20% testing)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=0.2, random_state=42
+    )
+
+    ## Step 2: Train the Linear Regression model
     linear = LinearRegression()
-    
-    ## Step 4: training the model
-    linear.fit(x_train, y_train)
-    
-    ## Step 5: make predictions
+    linear.fit(x_train, y_train)  # Train model on training data
+
+    ## Step 3: Make predictions
     predictions = linear.predict(x_test)
-    
-    ## Step 6: evaluate model performance
-    mae = mean_absolute_error(predictions, y_test)
-    
-    ## Display results
-    st.write("📉 **Mean Absolute Error (MAE):**", round(mae, 2))
-    st.write("📈 **Sample Predictions:**")
-    st.dataframe(pd.DataFrame({"Actual": y_test.values[:10], "Predicted": predictions[:10]}))
+
+    ## Step 4: Calculate error metrics
+    mae = mean_absolute_error(y_test, predictions)  # Mean Absolute Error
+    mse = mean_squared_error(y_test, predictions)  # Mean Squared Error
+    rmse = np.sqrt(mse)  # Root Mean Squared Error
+
+    ## Step 5: User selection for output
+    option = st.selectbox(
+        "Choose what to display:",
+        ["Metrics (MAE, MSE, RMSE)", "Actual vs Predicted Plot"]
+    )
+
+    # Display error metrics
+    if option == "Metrics (MAE, MSE, RMSE)":
+        st.write("📉 *Mean Absolute Error (MAE):*", round(mae, 2))
+        st.write("📈 *Mean Squared Error (MSE):*", round(mse, 2))
+        st.write("📊 *Root Mean Squared Error (RMSE):*", round(rmse, 2))
+
+    # Display scatter plot of actual vs predicted values
+    elif option == "Actual vs Predicted Plot":
+        plt.figure(figsize=(8, 6))
+        sns.scatterplot(x=y_test, y=predictions)  # Scatter plot
+        plt.plot(
+            [y_test.min(), y_test.max()], 
+            [y_test.min(), y_test.max()], 
+            color='red', linestyle='--'
+        )  # Reference line for perfect prediction
+        
+        plt.xlabel("Actual Resale Price")
+        plt.ylabel("Predicted Resale Price")
+        plt.title("Actual vs. Predicted Resale Prices")
+
+        st.pyplot(plt)  # Show plot in Streamlit
