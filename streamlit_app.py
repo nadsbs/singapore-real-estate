@@ -89,10 +89,6 @@ elif selected == "📈 Visualization":
     st.title("🏠 Singapore Resale Prices Dashboard")
     st.markdown("Explore insights from resale prices dataset.")
 
-    # Display dataset preview
-    st.subheader("📊 Dataset Preview")
-    st.dataframe(df.head())
-
     # Sidebar filters
     st.sidebar.header("Filter Data")
     year_range = st.sidebar.slider("Select Year Range", int(df["year"].min()), int(df["year"].max()), (2015, 2023))
@@ -105,7 +101,7 @@ elif selected == "📈 Visualization":
     # Apply filters
     filtered_df = df[(df["year"].between(year_range[0], year_range[1])) & (df["flat_type"].isin(flat_type))]
 
-    # Resale Price Trends Over Time
+    ### 📈 Resale Price Trends Over Time
     st.subheader("📈 Resale Price Trends Over Time")
     fig, ax = plt.subplots(figsize=(10, 5))
     sns.lineplot(data=filtered_df, x="year", y="resale_price", hue="flat_type", marker="o", ax=ax)
@@ -114,7 +110,7 @@ elif selected == "📈 Visualization":
     plt.title("Resale Price Trends Over Time")
     st.pyplot(fig)
 
-    # Average Resale Price by Town
+    ### 🏙️ Average Resale Price by Town
     st.subheader("🏙️ Average Resale Price by Town")
     st.markdown("""
     This bar chart compares the **average resale prices** across different towns in Singapore.  
@@ -131,7 +127,7 @@ elif selected == "📈 Visualization":
     plt.title("Average Resale Price by Town")
     st.pyplot(fig)
 
-    # Price vs Floor Area (Regression Plot)
+    ### 📈 Price vs Floor Area (Regression Plot)
     st.subheader("📈 Price vs Floor Area (Regression Plot)")
     st.markdown("""
     This scatter plot visualizes the relationship between **floor area (sqm)** and **resale price (SGD)** for properties in Singapore.  
@@ -143,7 +139,42 @@ elif selected == "📈 Visualization":
     plt.xlabel("Floor Area (sqm)")
     plt.ylabel("Resale Price (SGD)")
     plt.title("Resale Price vs Floor Area (with Regression Line)")
-    st.pyplot(fig)            
+    st.pyplot(fig)
+
+    ### 🔗 Correlation Matrix
+    st.subheader("🔗 Correlation Matrix")
+    st.markdown("""
+    The correlation matrix helps us understand relationships between different numerical features.  
+    - A value close to **1** or **-1** indicates a strong correlation.  
+    - **Darker colors** show stronger correlations.
+    """)
+    
+    # Select numeric columns and remove 'latitude', 'longitude', and 'postal_code'
+    numeric_columns = filtered_df.select_dtypes(include=["number"]).columns.tolist()
+    excluded_columns = ["latitude", "longitude", "postal_code"]
+    numeric_columns = [col for col in numeric_columns if col not in excluded_columns]
+
+    if len(numeric_columns) > 1:
+        correlation = filtered_df[numeric_columns].corr()
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5, ax=ax)
+        plt.title("Feature Correlation Matrix")
+        st.pyplot(fig)
+    else:
+        st.warning("Not enough numerical data for correlation matrix.")
+
+    ### 🗺 Interactive Map of Resale Transactions
+    st.subheader("🗺 HDB Resale Locations in Singapore")
+    st.markdown("""
+    This map visualizes **resale transactions** in Singapore based on latitude and longitude.  
+    - Each point represents a resale transaction.  
+    - You can zoom in to explore different areas.
+    """)
+
+    if "latitude" in df.columns and "longitude" in df.columns:
+        st.map(filtered_df[["latitude", "longitude"]])
+    else:
+        st.warning("Latitude and Longitude data is missing from the dataset.")
 
 # Prediction section
 elif selected == "🤖 Prediction":
