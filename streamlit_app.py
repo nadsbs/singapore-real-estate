@@ -54,6 +54,8 @@ if selected == "📖 Description":
     2. **Data Visualization:** Interactive dashboards with **Looker**.
     3. **Predictive Modeling:** Machine learning-based price forecasting.
     """)
+
+    st.markdown("Group members: Nada Beltagui, Deema Hazim, Breanna Richard, and Kasnishk Surana.")
     
     st.success("This project leverages machine learning and interactive dashboards to provide deeper insights into Singapore’s HDB resale market trends.")
 elif selected == "📊 Data Exploration":
@@ -115,7 +117,7 @@ elif selected == "📈 Visualization":
     st.markdown("""
     This bar chart compares the **average resale prices** across different towns in Singapore.  
     - **Bukit Timah and Bukit Panjang** have the highest resale prices.  
-    - **Tao Payoh and Woodlands Yishun ** have the lowest prices.  
+    - **Tao Payoh and Woodlands Yishun** have the lowest prices.  
     - This allows buyers to compare affordability across different locations.
     """)
     fig, ax = plt.subplots(figsize=(12, 6))
