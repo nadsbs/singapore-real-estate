@@ -114,8 +114,8 @@ elif selected == "📈 Visualization":
     st.subheader("🏙️ Average Resale Price by Town")
     st.markdown("""
     This bar chart compares the **average resale prices** across different towns in Singapore.  
-    - **Central Area and Bukit Timah** have the highest resale prices.  
-    - **Yishun, Woodlands, and Jurong West** have the lowest prices.  
+    - **Bukit Timah and Bukit Panjang** have the highest resale prices.  
+    - **Tao Payoh and Woodlands Yishun ** have the lowest prices.  
     - This allows buyers to compare affordability across different locations.
     """)
     fig, ax = plt.subplots(figsize=(12, 6))
