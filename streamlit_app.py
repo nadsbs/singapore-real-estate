@@ -129,18 +129,18 @@ elif selected == "📈 Visualization":
     plt.title("Average Resale Price by Town")
     st.pyplot(fig)
 
-    ### 📈 Price vs Floor Area (Regression Plot)
-    st.subheader("📈 Price vs Floor Area (Regression Plot)")
+    ### 📈 Price vs Floor Area (Scatter Plot)
+    st.subheader("📈 Price vs Floor Area (Scatter Plot)")
     st.markdown("""
     This scatter plot visualizes the relationship between **floor area (sqm)** and **resale price (SGD)** for properties in Singapore.  
     - Each dot represents a property listing.  
-    - The red **regression line** shows the general trend: **larger flats tend to have higher resale prices**.
+    - The red **line of best fit** shows the general trend: **larger flats tend to have higher resale prices**.
     """)
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.regplot(data=filtered_df, x="floor_area_sqm", y="resale_price", scatter_kws={"alpha": 0.5}, line_kws={"color": "red"}, ax=ax)
     plt.xlabel("Floor Area (sqm)")
     plt.ylabel("Resale Price (SGD)")
-    plt.title("Resale Price vs Floor Area (with Regression Line)")
+    plt.title("Resale Price vs Floor Area (with Line of best fit)")
     st.pyplot(fig)
 
     ### 🔗 Correlation Matrix
