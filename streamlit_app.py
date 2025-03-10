@@ -55,7 +55,7 @@ if selected == "📖 Description":
     3. **Predictive Modeling:** Machine learning-based price forecasting.
     """)
 
-    st.markdown("Group members: Nada Beltagui, Deema Hazim, Breanna Richard, and Kasnishk Surana.")
+    st.markdown("Group members: Nada Beltagui, Deema Hazim, Breanna Richard, and Kanishk Surana.")
     
     st.success("This project leverages machine learning and interactive dashboards to provide deeper insights into Singapore’s HDB resale market trends.")
 elif selected == "📊 Data Exploration":
