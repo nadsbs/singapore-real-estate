@@ -185,7 +185,7 @@ elif selected == "🤖 Prediction":
     st.markdown("### 🤖 Price Prediction Using Machine Learning")
 
     ## Step 1: Split dataset into X (features) and y (target variable)
-    x = df[["closest_mrt_dist", "floor_area_sqm", "lease_commence_date", "year", "years_remaining", "number_of_rooms"]]  # Features
+    x = df[["closest_mrt_dist", "floor_area_sqm", "years_remaining", "number_of_rooms"]]  # Features
     y = df["resale_price"]  # Target variable
 
     # Split data into training and testing sets (80% training, 20% testing)
