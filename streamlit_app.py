@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import sklearn
+import plotly.express as px
 
 from streamlit_option_menu import option_menu
 from sklearn.model_selection import train_test_split  
@@ -151,32 +152,33 @@ elif selected == "📈 Visualization":
     - **Darker colors** show stronger correlations.
     """)
     
-    # Select numeric columns and remove 'latitude', 'longitude', and 'postal_code'
-    numeric_columns = filtered_df.select_dtypes(include=["number"]).columns.tolist()
+    numeric_columns = df.select_dtypes(include=["number"]).columns.tolist()
     excluded_columns = ["latitude", "longitude", "postal_code"]
-    numeric_columns = [col for col in numeric_columns if col not in excluded_columns]
+    st.write(numeric_columns)
 
-    if len(numeric_columns) > 1:
-        correlation = filtered_df[numeric_columns].corr()
-        fig, ax = plt.subplots(figsize=(8, 6))
-        sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5, ax=ax)
-        plt.title("Feature Correlation Matrix")
-        st.pyplot(fig)
-    else:
-        st.warning("Not enough numerical data for correlation matrix.")
+    filtered_numeric_columns = [col for col in numeric_columns if col not in excluded_columns]
+
+# Let the user select only from the filtered columns
+    selected_vars = st.multiselect("Select variables for correlation matrix", filtered_numeric_columns, default=filtered_numeric_columns)
+
+# sns.heatmap(correlation)
+    if len(selected_vars)>1:
+        tab_corr, = st.tabs(["Correlation"])
+        correlation = df[selected_vars].corr()
+        fig = px.imshow(correlation.values, x=correlation.index, y=correlation.columns, labels=dict(color="Correlation"), text_auto=".2f")
+        tab_corr.plotly_chart(fig, theme = "streamlit", use_container_width=True)
+
 
     ### 🗺 Interactive Map of Resale Transactions
     st.subheader("🗺 HDB Resale Locations in Singapore")
     st.markdown("""
-    This map visualizes **resale transactions** in Singapore based on latitude and longitude.  
-    - Each point represents a resale transaction.  
+    This map visualizes the location of the homes in the dataset in Singapore based on latitude and longitude.  
+    - Each point represents a home.  
     - You can zoom in to explore different areas.
     """)
 
-    if "latitude" in df.columns and "longitude" in df.columns:
-        st.map(filtered_df[["latitude", "longitude"]])
-    else:
-        st.warning("Latitude and Longitude data is missing from the dataset.")
+    # You can also customize the width, height, and scrolling
+    st.components.v1.iframe("https://lookerstudio.google.com/embed/reporting/f6bfd06d-2009-4e2a-9826-51787d8af70e/page/m659E", width=800, height=500, scrolling=True)
 
 # Prediction section
 elif selected == "🤖 Prediction":
@@ -185,7 +187,7 @@ elif selected == "🤖 Prediction":
     st.markdown("### 🤖 Price Prediction Using Machine Learning")
 
     ## Step 1: Split dataset into X (features) and y (target variable)
-    x = df[["closest_mrt_dist", "floor_area_sqm", "years_remaining", "number_of_rooms"]]  # Features
+    x = df[["closest_mrt_dist", "floor_area_sqm", "number_of_rooms"]]  # Features
     y = df["resale_price"]  # Target variable
 
     # Split data into training and testing sets (80% training, 20% testing)
@@ -208,7 +210,7 @@ elif selected == "🤖 Prediction":
     ## Step 5: User selection for output
     option = st.selectbox(
         "Choose what to display:",
-        ["Metrics (MAE, MSE, RMSE)", "Actual vs Predicted Plot"]
+        ["Metrics (MAE, MSE, RMSE)", "Actual vs Predicted Plot", "Predict a Price"]
     )
 
     # Display error metrics
@@ -232,3 +234,41 @@ elif selected == "🤖 Prediction":
         plt.title("Actual vs. Predicted Resale Prices")
 
         st.pyplot(plt)  # Show plot in Streamlit
+
+    elif option == "Predict a Price":
+        st.write("Enter the property details below to get a predicted price:")
+
+        # Let user enter inputs
+        closest_mrt_dist_input = st.number_input(
+            "Closest MRT distance (meters):",
+            min_value=0.0,
+            max_value=50000.0,
+            value=500.0,
+            step=50.0,
+        )
+
+        floor_area_input = st.number_input(
+            "Floor area (sqm):",
+            min_value=10.0,
+            max_value=500.0,
+            value=80.0,
+            step=5.0,
+        )
+
+        number_of_rooms_input = st.number_input(
+            "Number of rooms:",
+            min_value=1,
+            max_value=10,
+            value=3,
+            step=1,
+        )
+
+        # Put inputs into an array/dataframe for prediction
+        user_input = np.array([[ closest_mrt_dist_input, floor_area_input, number_of_rooms_input]])
+
+        # Make prediction
+        predicted_price = linear.predict(user_input)
+
+        # Show the predicted price
+        st.subheader("Predicted Resale Price:")
+        st.write(f"${predicted_price[0]:,.2f}")
